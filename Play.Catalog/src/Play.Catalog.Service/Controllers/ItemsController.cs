@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Play.Catalog.Service.Dtos;
 using Play.Catalog.Service.Entities;
-using Play.Catalog.Service.Repositories;
+using Play.Common;
 
 namespace Play.Catalog.Service.Controllers;
 
@@ -25,7 +25,7 @@ public class ItemsController : ControllerBase
     {
         var items = (await itemsRepository.GetAllAsync())
                     .Select(item => item.AsDto());
-                    
+
         return items;
     }
 
@@ -63,7 +63,7 @@ public class ItemsController : ControllerBase
     {
         var existingItem = await itemsRepository.GetAsync(id);
 
-        if(existingItem == null) 
+        if (existingItem == null)
         {
             return NotFound();
         }
@@ -82,7 +82,7 @@ public class ItemsController : ControllerBase
     {
         var item = await itemsRepository.GetAsync(id);
 
-        if(item == null) 
+        if (item == null)
         {
             return NotFound();
         }
