@@ -48,6 +48,22 @@ namespace Play.Inventory.Service
                     logger.LogWarning($"Delaying for {timespan.TotalSeconds} seconds, then retry {retryAttempt}");
                 }
             ))
+            .AddTransientHttpErrorPolicy(builder => builder.Or<TimeoutRejectedException>().CircuitBreakerAsync(
+                handledEventsAllowedBeforeBreaking: 3,
+                durationOfBreak: TimeSpan.FromSeconds(30),
+                onBreak: (outcome, timespan) =>
+                {
+                    var serviceProvider = services.BuildServiceProvider();
+                    var logger = serviceProvider.GetService<ILogger<CatalogClient>>();
+                    logger.LogWarning($"Opening the circuit for {timespan.TotalSeconds} seconds...");
+                },
+                onReset: () =>
+                {
+                    var serviceProvider = services.BuildServiceProvider();
+                    var logger = serviceProvider.GetService<ILogger<CatalogClient>>();
+                    logger.LogWarning($"Closing the circuit...");
+                }
+            ))
             .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(seconds: 1));
 
             services.AddControllers();
