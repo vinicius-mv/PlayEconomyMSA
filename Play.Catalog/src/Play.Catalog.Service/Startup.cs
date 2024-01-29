@@ -1,16 +1,15 @@
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Serializers;
-using MongoDB.Driver;
 using Play.Catalog.Service.Entities;
 using Play.Common.MongoDB;
 using Play.Common.Settings;
+using Play.Catalog.Service.Settings;
+using MassTransit.Definition;
 
 namespace Play.Catalog.Service
 {
@@ -22,7 +21,6 @@ namespace Play.Catalog.Service
         {
             Configuration = configuration;
         }
-
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -32,6 +30,18 @@ namespace Play.Catalog.Service
 
             services.AddMongo();
             services.AddMongoRepository<Item>("items");
+
+            services.AddMassTransit(x =>
+            {
+                x.UsingRabbitMq((context, configurator) =>
+                {
+                    var RabbitMQSettings = Configuration.GetSection(nameof(Settings.RabbitMQSettings)).Get<RabbitMQSettings>();
+                    configurator.Host(RabbitMQSettings.Host);
+                    configurator.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter(prefix: serviceSettings.ServiceName, includeNamespace: false));
+                });
+            });
+
+            services.AddMassTransitHostedService();
 
             services.AddControllers(options =>
             {
