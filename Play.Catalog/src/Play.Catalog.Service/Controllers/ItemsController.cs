@@ -64,7 +64,7 @@ public class ItemsController : ControllerBase
         return CreatedAtAction(nameof(GetByIdAsync), new { id = item.Id }, item);
     }
 
-    [HttpPut]
+    [HttpPut("{id}")]
     public async Task<IActionResult> PutAsync(Guid id, UpdateItemDto updateItemDto)
     {
         var existingItem = await itemsRepository.GetAsync(id);
